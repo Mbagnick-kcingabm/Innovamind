@@ -1,0 +1,5 @@
+{
+  "name": "Cices Events",
+  "description": "Plateforme de billetterie événementielle avec défilement infini et génération de tickets QR.",
+  "requestFramePermissions": []
+}

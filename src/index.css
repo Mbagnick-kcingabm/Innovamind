@@ -1,0 +1,104 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "DM Sans", sans-serif;
+  --color-g-deep: #0a5c3a;
+  --color-g-mid: #15803d;
+  --color-g-bright: #22c55e;
+  --color-g-light: #86efac;
+  --color-dark: #0d1f17;
+}
+
+@layer base {
+  body {
+    @apply bg-dark text-white font-sans overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  .text-shadow-glow {
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  .animate-infinite-scroll {
+    animation: infinite-scroll 40s linear infinite;
+  }
+
+  .pause-on-hover:hover {
+    animation-play-state: paused;
+  }
+
+  .pause-on-touch:active {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes infinite-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-1920px); }
+}
+
+/* Custom animations from HTML */
+@keyframes swingL {
+  0%, 100% { transform: rotate(25deg); opacity: 0.5; }
+  50%      { transform: rotate(45deg); opacity: 0.9; }
+}
+
+@keyframes swingR {
+  0%, 100% { transform: rotate(-25deg); opacity: 0.5; }
+  50%      { transform: rotate(-45deg); opacity: 0.9; }
+}
+
+@keyframes haloBreath {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes alertPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.5), 0 8px 25px rgba(255, 107, 0, 0.3); }
+  50% { box-shadow: 0 0 0 16px rgba(255, 107, 0, 0), 0 8px 25px rgba(255, 107, 0, 0.5); }
+}
+
+@keyframes ringOut {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+@keyframes dotB {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1.3); opacity: 1; }
+}
+
+@keyframes flashLogo {
+  0%, 28% { left: -100%; opacity: 0; }
+  33% { opacity: 1; }
+  62% { left: 160%; opacity: 1; }
+  67%, 100% { left: 160%; opacity: 0; }
+}
+
+.animate-swing-l { animation: swingL 7s ease-in-out infinite; }
+.animate-swing-r { animation: swingR 8s ease-in-out infinite; }
+.animate-halo-breath { animation: haloBreath 7s ease-in-out infinite; }
+.animate-live-pulse { animation: livePulse 2s infinite; }
+.animate-float-badge { animation: floatBadge 3s ease-in-out infinite; }
+.animate-alert-pulse { animation: alertPulse 1.8s ease-in-out infinite; }
+.animate-ring-out { animation: ringOut 1.8s ease-out infinite; }
+.animate-ring-out-delay { animation: ringOut 1.8s ease-out 0.4s infinite; }
+.animate-dot-b { animation: dotB 1.3s infinite ease-in-out; }
+.animate-flash-logo { animation: flashLogo 3.2s ease-in-out infinite; }
