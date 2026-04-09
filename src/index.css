@@ -98,6 +98,27 @@
 .animate-live-pulse { animation: livePulse 2s infinite; }
 .animate-float-badge { animation: floatBadge 3s ease-in-out infinite; }
 .animate-alert-pulse { animation: alertPulse 1.8s ease-in-out infinite; }
+
+/* Form styling for better readability */
+select, input[type="text"], input[type="tel"], input[type="number"], input[type="email"],
+textarea {
+  color: white !important;
+}
+
+select {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+select option {
+  background-color: #1e293b;
+  color: white;
+  padding: 8px;
+}
+
+select option:hover {
+  background-color: #22c55e;
+  color: #000;
+}
 .animate-ring-out { animation: ringOut 1.8s ease-out infinite; }
 .animate-ring-out-delay { animation: ringOut 1.8s ease-out 0.4s infinite; }
 .animate-dot-b { animation: dotB 1.3s infinite ease-in-out; }

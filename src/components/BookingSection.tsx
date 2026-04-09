@@ -1,4 +1,4 @@
-import React, { FormEvent } from 'react';
+import React, { FormEvent, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, MapPin, Ticket, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -19,7 +19,8 @@ interface TicketData {
   id: string;
   qrData: string;
   name: string;
-  email: string;
+  phone: string;
+  phoneCode: string;
   event: string;
   type: string;
   date: string;
@@ -28,7 +29,8 @@ interface TicketData {
 
 interface FormData {
   name: string;
-  email: string;
+  phone: string;
+  phoneCode: string;
   event: string;
   places: number;
   type: string;
@@ -65,6 +67,37 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   setSelectedEvent,
   EVENTS
 }) => {
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const downloadQRCode = () => {
+    if (!qrRef.current || !ticket) return;
+
+    const svg = qrRef.current.querySelector('svg');
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width * 2; // Higher resolution
+      canvas.height = img.height * 2;
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const pngFile = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = `ticket-${ticket.id}.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+      }
+    };
+
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
   return (
     <motion.section
       id="commande"
@@ -83,7 +116,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center"
           >
-            <Logo className="mb-8 scale-150" />
+            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-150 animate-pulse" />
             <div className="text-white/70 uppercase tracking-[0.3em] text-sm mb-6 animate-pulse">Chargement de l'événement…</div>
             <div className="flex gap-2 mb-8">
               {[0, 1, 2].map(i => (
@@ -111,7 +144,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center"
           >
-            <Logo className="mb-8 scale-150" />
+            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-150 animate-pulse" />
             <div className="text-white/70 uppercase tracking-[0.3em] text-sm mb-6 animate-pulse">Génération du ticket…</div>
             <div className="flex gap-2 mb-8">
               {[0, 1, 2].map(i => (
@@ -148,6 +181,22 @@ const BookingSection: React.FC<BookingSectionProps> = ({
           <h2 className="font-serif text-3xl md:text-5xl font-black text-white leading-tight mb-4">
             {selectedEvent.title}
           </h2>
+          <p className="text-white/70 text-sm md:text-base leading-relaxed mb-4">
+            {selectedEvent.title === 'FIDAK 2026' 
+              ? 'Le plus grand salon international de Dakar, rassemblant exposants et visiteurs du monde entier pour une expérience unique.'
+              : selectedEvent.category === 'Concert' 
+                ? 'Vivez une soirée musicale inoubliable avec des artistes de renommée internationale.'
+                : selectedEvent.category === 'Théâtre'
+                  ? 'Plongez dans l\'univers fascinant du théâtre avec une production exceptionnelle.'
+                  : selectedEvent.category === 'Sport'
+                    ? 'Participez à un événement sportif majeur et ressentez l\'adrénaline de la compétition.'
+                    : selectedEvent.category === 'Forum'
+                      ? 'Échangez avec des experts et leaders dans ce forum de haut niveau.'
+                      : selectedEvent.category === 'Gastronomie'
+                        ? 'Découvrez les saveurs authentiques de l\'Afrique dans une ambiance conviviale.'
+                        : 'Découvrez cet événement unique et enrichissant pour tous les passionnés.'
+            }
+          </p>
           <div className="flex flex-wrap gap-4 md:gap-6 text-white/60 text-xs md:text-sm">
             <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-g-bright" /> {selectedEvent.date}</span>
             <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-g-bright" /> {selectedEvent.location}</span>
@@ -170,15 +219,15 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                 transition={{ duration: 0.5 }}
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <Logo className="scale-75 origin-left" />
+                  <Logo eventTitle={selectedEvent.title} className="scale-75 origin-left animate-bounce" />
                   <div className="h-8 w-px bg-white/10" />
                   <div>
                     <h3 className="font-serif text-lg font-black text-white">Réserver votre Ticket</h3>
                   </div>
                 </div>
 
-                <p className="text-white/50 text-[10px] font-light leading-relaxed mb-6">
-                  Remplissez le formulaire — votre billet personnalisé avec QR code est généré instantanément.
+                <p className="text-white/50 text-[13px] font-light leading-relaxed mb-6">
+                  Remplissez le formulaire — votre billet sera généré instantanément.
                 </p>
 
                 <form onSubmit={handleBooking} className="space-y-3">
@@ -195,12 +244,12 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-1">Nom complet</label>
+                    <label className="text-[12px] font-bold uppercase tracking-widest text-white ml-1">Nom complet</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ex : Amadou Diallo"
-                      className={`w-full bg-black/20 border ${formErrors.name ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-3 py-2 text-xs text-white focus:border-g-bright focus:bg-g-bright/5 transition-all outline-none`}
+                      placeholder="Ex : Donald TRUMP"
+                      className={`w-full bg-slate-800/60 border ${formErrors.name ? 'border-red-500/70' : 'border-white/20'} rounded-lg px-3 py-2 text-xs text-white font-medium placeholder-white/40 focus:border-g-bright focus:bg-slate-800/80 transition-all outline-none hover:bg-slate-800/70 hover:border-white/40 shadow-sm`}
                       value={form.name}
                       onChange={e => setForm({ ...form, name: e.target.value })}
                     />
@@ -208,35 +257,69 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-1">Adresse e-mail</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="votre@email.com"
-                      className={`w-full bg-black/20 border ${formErrors.email ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-3 py-2 text-xs text-white focus:border-g-bright focus:bg-g-bright/5 transition-all outline-none`}
-                      value={form.email}
-                      onChange={e => setForm({ ...form, email: e.target.value })}
-                    />
-                    {formErrors.email && <p className="text-[8px] text-red-400 ml-1">{formErrors.email}</p>}
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white ml-1">Numéro de téléphone</label>
+                    <div className="flex gap-2">
+                      <div className="relative">
+                        <select
+                          className="bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 text-xs text-white font-medium focus:border-g-bright focus:bg-slate-800 transition-all outline-none w-24 appearance-none pr-8 cursor-pointer hover:bg-slate-700/80 hover:border-white/40 shadow-lg"
+                          value={form.phoneCode}
+                          onChange={e => setForm({ ...form, phoneCode: e.target.value })}
+                          title="Sélectionner le code pays"
+                        >
+                          <option value="+221">🇸🇳 +221</option>
+                          <option value="+33">🇫🇷 +33</option>
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+49">🇩🇪 +49</option>
+                        </select>
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="77 123 45 67"
+                        className={`flex-1 bg-slate-800/60 border ${formErrors.phone ? 'border-red-500/70' : 'border-white/20'} rounded-lg px-3 py-2 text-xs text-white font-medium placeholder-white/40 focus:border-g-bright focus:bg-slate-800/80 transition-all outline-none hover:bg-slate-800/70 hover:border-white/40 shadow-sm`}
+                        value={form.phone}
+                        onChange={e => setForm({ ...form, phone: e.target.value })}
+                        title="Numéro de téléphone"
+                      />
+                    </div>
+                    {formErrors.phone && <p className="text-[8px] text-red-400 ml-1">{formErrors.phone}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-1">Événement</label>
-                      <select
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-g-bright focus:bg-g-bright/5 transition-all outline-none appearance-none"
-                        value={form.event}
-                        onChange={e => {
-                          setForm({ ...form, event: e.target.value });
-                          const ev = EVENTS.find(ev => ev.title === e.target.value);
-                          if (ev) setSelectedEvent(ev);
-                        }}
-                      >
-                        {EVENTS.map(ev => <option key={ev.id} value={ev.title} className="bg-dark">{ev.title}</option>)}
-                      </select>
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-white ml-1">Événement</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 pr-8 text-xs text-white font-medium focus:border-g-bright focus:bg-slate-800 transition-all outline-none appearance-none cursor-pointer hover:bg-slate-700/80 hover:border-white/40 shadow-lg"
+                          value={form.event}
+                          onChange={e => {
+                            setForm({ ...form, event: e.target.value });
+                            const ev = EVENTS.find(ev => ev.title === e.target.value);
+                            if (ev) setSelectedEvent(ev);
+                          }}
+                          title="Sélectionner un événement"
+                        >
+                          {EVENTS.map(ev => (
+                            <option key={ev.id} value={ev.title} className="bg-dark text-white">
+                              {ev.title}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="relative">
+                          <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-1">Places</label>
+                      <label className="text-[12px] font-bold uppercase tracking-widest text-white/70 ml-1">Places</label>
                       <input
                         type="number"
                         readOnly
@@ -248,27 +331,43 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-1">Type de billet</label>
-                    <select
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-g-bright focus:bg-g-bright/5 transition-all outline-none appearance-none"
-                      value={form.type}
-                      onChange={e => setForm({ ...form, type: e.target.value })}
-                    >
-                      <option value="Standard" className="bg-dark">Standard</option>
-                      <option value="VIP" className="bg-dark">VIP</option>
-                      <option value="VVIP – Lounge Privé" className="bg-dark">VVIP – Lounge Privé</option>
-                    </select>
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-white/70 ml-1">Type de billet</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 pr-10 text-xs text-white font-medium focus:border-g-bright focus:bg-slate-800 transition-all outline-none appearance-none cursor-pointer hover:bg-slate-700/80 hover:border-white/40 shadow-lg"
+                          value={form.type}
+                          onChange={e => setForm({ ...form, type: e.target.value })}
+                          title="Sélectionner le type de billet"
+                        >
+                          <option value="Standard" className="bg-slate-700 text-white flex items-center gap-2">
+                            🎫 Standard - Accès général
+                          </option>
+                          <option value="VIP" className="bg-slate-700 text-white flex items-center gap-2">
+                            ⭐ VIP - Zone privilégiée
+                          </option>
+                          <option value="VVIP – Lounge Privé" className="bg-slate-700 text-white flex items-center gap-2">
+                            👑 VVIP – Lounge Privé
+                          </option>
+                        </select>
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none flex items-center gap-1">
+                          {form.type === 'Standard' && <span className="text-white/60">🎫</span>}
+                          {form.type === 'VIP' && <span className="text-yellow-400">⭐</span>}
+                          {form.type === 'VVIP – Lounge Privé' && <span className="text-purple-400">👑</span>}
+                          <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="pt-2">
                     <label className="flex items-start gap-2 cursor-pointer group">
                       <input
                         type="checkbox"
-                        className="mt-0.5 w-3 h-3 rounded border-white/10 bg-black/20 text-g-bright focus:ring-g-bright/20"
+                        className="mt-0.5 w-3 h-3 rounded border-white/20 bg-slate-800 text-g-bright focus:ring-g-bright/20"
                         checked={form.terms}
                         onChange={e => setForm({ ...form, terms: e.target.checked })}
                       />
-                      <span className="text-[8px] text-white/40 group-hover:text-white/60 transition-colors">
+                      <span className="text-[11px] text-white group-hover:text-white transition-colors">
                         J'accepte les conditions d'utilisation et la politique de confidentialité de Cices Events.
                       </span>
                     </label>
@@ -310,7 +409,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                         <div className="text-g-bright font-serif font-bold mb-1">✅ Ticket Confirmé !</div>
                         <div className="font-mono text-[10px] text-white/40 mb-6"># {ticket.id}</div>
 
-                        <div className="bg-white p-3 rounded-xl w-fit mx-auto mb-6 shadow-2xl">
+                        <div ref={qrRef} className="bg-white p-3 rounded-xl w-fit mx-auto mb-6 shadow-2xl">
                           <QRCodeSVG value={ticket.qrData} size={140} />
                         </div>
 
@@ -320,7 +419,10 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                           📅 {ticket.date} · {ticket.places} place(s) · <strong>{ticket.type}</strong>
                         </div>
 
-                        <button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold py-3 rounded-full transition-all flex items-center justify-center gap-2">
+                        <button 
+                          onClick={downloadQRCode}
+                          className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold py-3 rounded-full transition-all flex items-center justify-center gap-2"
+                        >
                           <Download className="w-4 h-4" />
                           Télécharger le QR Code
                         </button>

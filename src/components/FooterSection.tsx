@@ -77,7 +77,7 @@ const FooterSection: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-g-bright/10 border border-g-bright/20 flex items-center justify-center text-g-bright">
                 <Mail className="w-5 h-5" />
               </div>
-              <span className="text-sm text-white/60">contact@cicesticket.com</span>
+              <span className="text-sm text-white/60">contact@innovamind.com</span>
             </div>
             <button className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-lg text-sm text-white/60 hover:text-g-bright hover:border-g-bright/40 transition-all">
               <Globe className="w-4 h-4" />
@@ -89,7 +89,7 @@ const FooterSection: React.FC = () => {
 
       <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
         <p className="text-xs text-white/20">
-          © Copyright 2026 – <span className="text-g-bright/50">Cices Events</span>
+          © Copyright 2026 – <span className="text-g-bright/50">Innova Mind</span>
         </p>
         <div className="flex flex-wrap justify-center gap-8">
           {['Conditions d\'utilisation', 'Politique de confidentialité', 'Cookies', 'GDPR'].map(item => (

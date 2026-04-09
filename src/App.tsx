@@ -20,13 +20,20 @@ import {
   Twitter,
   Phone,
   Mail,
-  Globe
+  Globe,
+  ArrowUp
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import imgfndb from './asset/imgfndb.jpeg';
+import imgfndf from './asset/imgfndf.jpeg';
+import imgfndd from './asset/imgfndd.jpeg';
+import imgfndl from './asset/imgfndl.jpeg';
 import HeroSection from './components/HeroSection';
 import EventsSection from './components/EventsSection';
 import BookingSection from './components/BookingSection';
 import FooterSection from './components/FooterSection';
+import AuthModal from './components/AuthModal';
+import AdminDashboard from './components/AdminDashboard';
 
 // --- Types ---
 interface EventData {
@@ -110,11 +117,11 @@ const EVENTS: EventData[] = [
 ];
 
 const HERO_SLIDES = [
-  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1501281668745-f74eccf877e2?w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1429514513361-8fa32282fd5f?w=1600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1600&auto=format&fit=crop'
+  imgfndb,
+  imgfndf,
+  imgfndd,
+  imgfndl,
+  imgfndb
 ];
 
 // --- Components ---
@@ -130,16 +137,22 @@ export default function App() {
     id: string; 
     qrData: string;
     name: string;
-    email: string;
+    phone: string;
+    phoneCode: string;
     event: string;
     type: string;
     date: string;
     places: number;
   } | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
   const [form, setForm] = useState({
     name: '',
-    email: '',
+    phone: '',
+    phoneCode: '+221',
     event: EVENTS[0].title,
     places: 1,
     type: 'Standard',
@@ -154,6 +167,19 @@ export default function App() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // Scroll to Top Handler
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Function to handle "Commander" button click specifically for FIDAK
   const handleCommanderClick = () => {
@@ -212,16 +238,16 @@ export default function App() {
 
     // 2. Sanitization & Validation
     const sanitizedName = form.name.trim();
-    const sanitizedEmail = form.email.trim().toLowerCase();
+    const sanitizedPhone = form.phone.trim();
     const errors: { [key: string]: string } = {};
 
     if (sanitizedName.length < 3) {
       errors.name = "Le nom doit contenir au moins 3 caractères";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(sanitizedEmail)) {
-      errors.email = "Veuillez entrer une adresse e-mail valide";
+    const phoneRegex = /^\d{7,15}$/;
+    if (!phoneRegex.test(sanitizedPhone.replace(/\s/g, ''))) {
+      errors.phone = "Veuillez entrer un numéro de téléphone valide (7-15 chiffres)";
     }
 
     if (!form.terms) {
@@ -238,7 +264,7 @@ export default function App() {
     const qrData = JSON.stringify({
       id: tid,
       name: sanitizedName,
-      email: sanitizedEmail,
+      phone: form.phoneCode + ' ' + sanitizedPhone,
       event: form.event,
       places: form.places,
       type: form.type
@@ -246,10 +272,11 @@ export default function App() {
     
     setTimeout(() => {
       setTicket({ 
-        id: tid, 
+        id: tid,
         qrData,
         name: sanitizedName,
-        email: sanitizedEmail,
+        phone: sanitizedPhone,
+        phoneCode: form.phoneCode,
         event: form.event,
         type: form.type,
         date: selectedEvent.date,
@@ -259,7 +286,8 @@ export default function App() {
       // Clear the form
       setForm({
         name: '',
-        email: '',
+        phone: '',
+        phoneCode: '+221',
         event: form.event, // Keep the current event selected
         places: 1,
         type: 'Standard',
@@ -276,6 +304,33 @@ export default function App() {
     }, 3500);
   };
 
+  const handleLoginSuccess = (role: 'admin' | 'user', email: string) => {
+    if (role === 'admin') {
+      setIsAdminLoggedIn(true);
+      setAdminEmail(email);
+    }
+    setIsAuthOpen(false);
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminLoggedIn(false);
+    setAdminEmail('');
+    setIsAuthOpen(false);
+  };
+
+  if (isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-dark selection:bg-g-bright selection:text-dark">
+        <AdminDashboard
+          EVENTS={EVENTS}
+          latestTicket={ticket}
+          adminEmail={adminEmail}
+          onLogout={handleAdminLogout}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-dark selection:bg-g-bright selection:text-dark">
       <HeroSection
@@ -283,6 +338,7 @@ export default function App() {
         setCurrentSlide={setCurrentSlide}
         HERO_SLIDES={HERO_SLIDES}
         handleCommanderClick={handleCommanderClick}
+        setIsAuthOpen={setIsAuthOpen}
       />
 
       <EventsSection EVENTS={EVENTS} startEventLoading={startEventLoading} />
@@ -305,6 +361,28 @@ export default function App() {
       {/* Footer */}
 
       <FooterSection />
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLoginSuccess={handleLoginSuccess} />
+
+      {/* Scroll to Top Button */}
+      <AnimatePresence>
+        {isScrolled && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 8 }}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-500 to-yellow-500 text-dark p-3 rounded-full shadow-[0_20px_50px_-18px_rgba(251,146,60,0.8)] hover:shadow-[0_24px_80px_-30px_rgba(251,146,60,0.9)] transition-shadow duration-300"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

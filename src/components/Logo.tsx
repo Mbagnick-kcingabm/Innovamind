@@ -1,12 +1,27 @@
 import React from 'react';
+import logoImg from '../asset/Innovalogo.png';
+import fidakLogo from '../asset/Logo.png';
 
-const Logo = ({ className = "" }: { className?: string }) => (
-  <div className={`flex items-center gap-2 ${className}`}>
-    <img src="/Logo.png" alt="CICES Logo" className="h-10 w-auto object-contain" />
-    <span className="font-serif text-2xl font-black tracking-tighter text-white">
-      CICES<span className="text-g-bright">EVENTS</span>
-    </span>
-  </div>
-);
+interface LogoProps {
+  className?: string;
+  eventTitle?: string;
+}
+
+const Logo: React.FC<LogoProps> = ({ className = "", eventTitle }) => {
+  const logoSrc = eventTitle === 'FIDAK 2026' ? fidakLogo : logoImg;
+
+  return (
+    <div className={`flex items-center justify-center ${className}`}>
+      <img
+        src={logoSrc}
+        alt="Logo"
+        className="h-20 sm:h-24 w-auto object-contain"
+        style={{
+          filter: 'drop-shadow(0 0 20px rgba(34, 197, 94, 0.35))'
+        }}
+      />
+    </div>
+  );
+};
 
 export default Logo;

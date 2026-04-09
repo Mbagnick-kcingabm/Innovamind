@@ -8,13 +8,15 @@ interface HeroSectionProps {
   setCurrentSlide: (slide: number) => void;
   HERO_SLIDES: string[];
   handleCommanderClick: () => void;
+  setIsAuthOpen: (isOpen: boolean) => void;
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({
   currentSlide,
   setCurrentSlide,
   HERO_SLIDES,
-  handleCommanderClick
+  handleCommanderClick,
+  setIsAuthOpen
 }) => {
   return (
     <motion.section
@@ -64,20 +66,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="font-serif text-4xl sm:text-5xl md:text-8xl font-black leading-tight text-white text-shadow-glow"
+          className="font-serif text-4xl sm:text-5xl md:text-6xl font-black leading-tight text-white text-shadow-glow"
         >
           Vivez des moments<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-g-bright to-g-light">inoubliables</span>
         </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6 text-base md:text-lg text-white/80 max-w-xl leading-relaxed font-light"
-        >
-          Découvrez, réservez et vivez les meilleurs événements culturels, sportifs et artistiques au Sénégal et en Afrique.
-        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -89,6 +82,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             Voir plus…
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </a>
+          <button 
+            onClick={() => setIsAuthOpen(true)}
+            className="group bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-orange-500/30"
+          >
+            Connectez Vous
+          </button>
         </motion.div>
 
         <motion.div
@@ -103,8 +102,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             { label: 'Villes', value: '12' }
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col">
-              <span className="font-serif text-2xl md:text-3xl font-bold text-g-bright">{stat.value}</span>
-              <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-white/50">{stat.label}</span>
+              <span className="font-serif text-2xl md:text-3xl font-bold text-white text-g-bright">{stat.value}</span>
+              <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-white/100">{stat.label}</span>
             </div>
           ))}
         </motion.div>
@@ -124,12 +123,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         </button>
 
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-3xl flex flex-col items-center gap-4 w-40 md:w-52 text-center animate-float-badge hidden sm:flex">
-          <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-g-bright to-g-mid rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-lg shadow-g-bright/40">
-            🎉
-          </div>
+          <Logo eventTitle="FIDAK 2026" className="w-5 h-5 md:w-34 md:h-34" />
           <div>
             <h3 className="font-serif font-bold text-white text-sm md:text-base">FIDAK 2026</h3>
-            <p className="text-[8px] md:text-[10px] text-white/50 mt-1">L'événement majeur de l'année</p>
+            <p className="text-[10px] md:text-[15px] text-white/100 mt-1">L'événement majeur de l'année</p>
           </div>
         </div>
       </div>
@@ -140,6 +137,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           <button
             key={i}
             onClick={() => setCurrentSlide(i)}
+            aria-label={`Aller au slide ${i + 1}`}
             className={`h-2 rounded-full transition-all duration-500 ${currentSlide === i ? 'w-8 bg-g-bright' : 'w-2 bg-white/30'}`}
           />
         ))}
