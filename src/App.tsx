@@ -34,6 +34,8 @@ import BookingSection from './components/BookingSection';
 import FooterSection from './components/FooterSection';
 import AuthModal from './components/AuthModal';
 import AdminDashboard from './components/AdminDashboard';
+import OrganizerDashboard from './components/OrganizerDashboard.tsx';
+import CreateEventPage from './pages/CreateEventPage';
 
 // --- Types ---
 interface EventData {
@@ -45,6 +47,13 @@ interface EventData {
   price: number;
   image: string;
   featured?: boolean;
+}
+
+interface OrganizerEvent extends EventData {
+  status: 'published' | 'draft' | 'closed' | 'cancelled' | 'active' | 'paused';
+  ticketsSold: number;
+  maxCapacity: number;
+  revenue: number;
 }
 
 // --- Data ---
@@ -148,6 +157,18 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
+  const [isOrganizerLoggedIn, setIsOrganizerLoggedIn] = useState(false);
+  const [organizerEmail, setOrganizerEmail] = useState('');
+  const [organizerPage, setOrganizerPage] = useState<'dashboard' | 'create-event'>('dashboard');
+  const [organizerEvents, setOrganizerEvents] = useState<OrganizerEvent[]>(() =>
+    EVENTS.slice(0, 3).map((event, index) => ({
+      ...event,
+      status: ['published', 'draft', 'closed'][index] as OrganizerEvent['status'],
+      ticketsSold: Math.floor(Math.random() * 50),
+      maxCapacity: 100,
+      revenue: Math.floor(Math.random() * 50000)
+    }))
+  );
   const [isScrolled, setIsScrolled] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -304,10 +325,13 @@ export default function App() {
     }, 3500);
   };
 
-  const handleLoginSuccess = (role: 'admin' | 'user', email: string) => {
+  const handleLoginSuccess = (role: 'admin' | 'organizer' | 'user', email: string) => {
     if (role === 'admin') {
       setIsAdminLoggedIn(true);
       setAdminEmail(email);
+    } else if (role === 'organizer') {
+      setIsOrganizerLoggedIn(true);
+      setOrganizerEmail(email);
     }
     setIsAuthOpen(false);
   };
@@ -317,6 +341,52 @@ export default function App() {
     setAdminEmail('');
     setIsAuthOpen(false);
   };
+
+  const handleOrganizerLogout = () => {
+    setIsOrganizerLoggedIn(false);
+    setOrganizerEmail('');
+    setIsAuthOpen(false);
+    setOrganizerPage('dashboard');
+  };
+
+  if (isOrganizerLoggedIn) {
+    return (
+      <div className="min-h-screen bg-dark selection:bg-g-bright selection:text-dark">
+        {organizerPage === 'dashboard' ? (
+          <OrganizerDashboard
+            organizerEmail={organizerEmail}
+            organizerEvents={organizerEvents}
+            onLogout={handleOrganizerLogout}
+            onCreateEvent={() => setOrganizerPage('create-event')}
+          />
+        ) : (
+          <CreateEventPage
+            onSave={(event) => {
+              setOrganizerEvents((current) => [
+                {
+                  id: event.id,
+                  title: event.title,
+                  category: event.category,
+                  date: event.startDateTime ? new Date(event.startDateTime).toLocaleDateString('fr-FR') : '',
+                  location: event.venue,
+                  price: event.tickets[0]?.price ?? 0,
+                  image: event.imageUrl || '',
+                  status: event.status,
+                  ticketsSold: event.ticketsSold,
+                  maxCapacity: event.maxCapacity,
+                  revenue: event.revenue
+                },
+                ...current
+              ]);
+              setOrganizerPage('dashboard');
+            }}
+            onCancel={() => setOrganizerPage('dashboard')}
+            onLogout={handleOrganizerLogout}
+          />
+        )}
+      </div>
+    );
+  }
 
   if (isAdminLoggedIn) {
     return (

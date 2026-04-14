@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
+import { X, Mail, Lock, User, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess?: (role: 'admin' | 'user', email: string) => void;
+  onLoginSuccess?: (role: 'admin' | 'organizer' | 'user', email: string) => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
@@ -15,6 +15,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +32,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
 
     const adminEmail = 'admin@cices.com';
     const adminPassword = 'Admin1234';
+    const organizerEmail = 'organizer@cices.com';
+    const organizerPassword = 'Organizer1234';
 
     if (isLogin) {
       if (email === adminEmail && password === adminPassword) {
         onLoginSuccess?.('admin', email);
+        setLoading(false);
+        return;
+      }
+
+      if (email === organizerEmail && password === organizerPassword) {
+        onLoginSuccess?.('organizer', email);
         setLoading(false);
         return;
       }
@@ -130,13 +139,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Mot de passe"
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm focus:border-g-bright outline-none transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white text-sm focus:border-g-bright outline-none transition-all"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
 
               <button

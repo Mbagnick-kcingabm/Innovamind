@@ -1,7 +1,11 @@
-import React, { FormEvent, useRef } from 'react';
+import React, { FormEvent, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, MapPin, Ticket, Download } from 'lucide-react';
+import { Calendar, MapPin, Ticket, Download, Share2, ArrowLeft, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import waveIcon from '../asset/iconcash/wave.jpg';
+import orangeIcon from '../asset/iconcash/om.png';
+import cardIcon from '../asset/iconcash/carte.jpg';
+import cinetpayIcon from '../asset/iconcash/cinetpay.svg';
 import Logo from './Logo';
 
 interface EventData {
@@ -68,6 +72,50 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   EVENTS
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'wave' | 'orange' | 'cinetpay' | 'card' | null>(null);
+  const [step, setStep] = useState<'form' | 'payment' | 'confirmation'>('form');
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const validateForm = () => {
+    const trimmedName = form.name.trim();
+    const cleanedPhone = form.phone.replace(/\D/g, '');
+
+    if (!trimmedName) {
+      setValidationError('Le nom est requis.');
+      return false;
+    }
+
+    if (!cleanedPhone) {
+      setValidationError('Le numéro de téléphone est requis.');
+      return false;
+    }
+
+    if (!/^[0-9]{9,15}$/.test(cleanedPhone)) {
+      setValidationError('Le numéro de téléphone est invalide.');
+      return false;
+    }
+
+    if (!form.type) {
+      setValidationError('Veuillez sélectionner un type de billet.');
+      return false;
+    }
+
+    if (!form.terms) {
+      setValidationError("Vous devez accepter les conditions d'utilisation.");
+      return false;
+    }
+
+    setValidationError(null);
+    return true;
+  };
+
+  const isPhoneValid = /^[0-9]{7,15}$/.test(form.phone.replace(/\D/g, ''));
+  const canProceedToPayment = !!form.name.trim() && isPhoneValid && form.terms && !!form.type;
+
+  const handleProceedToPayment = () => {
+    if (!validateForm()) return;
+    setStep('payment');
+  };
 
   const downloadQRCode = () => {
     if (!qrRef.current || !ticket) return;
@@ -96,6 +144,102 @@ const BookingSection: React.FC<BookingSectionProps> = ({
     };
 
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
+  const shareOnWhatsApp = () => {
+    if (!ticket) return;
+
+    const ticketInfo = `🎫 *${ticket.event}*\n\n` +
+      `👤 *Nom:* ${ticket.name}\n` +
+      `📱 *Téléphone:* ${ticket.phoneCode}${ticket.phone}\n` +
+      `🎭 *Type:* ${ticket.type}\n` +
+      `📅 *Date:* ${ticket.date}\n` +
+      `🎟️ *Places:* ${ticket.places}\n` +
+      `🔖 *ID Ticket:* ${ticket.id}\n\n` +
+      `Cices Events - Réservation Confirmée ✅`;
+
+    const phoneNumber = ticket.phoneCode.replace('+', '');
+    const encodedText = encodeURIComponent(ticketInfo);
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedText}`;
+
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const downloadPDF = () => {
+    if (!ticket) return;
+
+    const element = document.createElement('div');
+    element.innerHTML = `
+      <div style="max-width: 800px; margin: 20px auto; font-family: Arial, sans-serif; background: linear-gradient(135deg, #0a2e1a 0%, #051a0d 100%); color: white; padding: 40px; border-radius: 20px; text-align: center;">
+        <h1 style="color: #7dffbc; margin-bottom: 30px; font-size: 28px;">🎫 Ticket Confirmé</h1>
+        <div style="background: rgba(0,0,0,0.3); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
+          <h2 style="margin: 10px 0; color: #7dffbc;">${ticket.event}</h2>
+          <p style="margin: 5px 0; font-size: 14px;">${ticket.type}</p>
+          <p style="margin: 20px 0; font-weight: bold; color: #7dffbc; word-break: break-all;">#${ticket.id}</p>
+        </div>
+        <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+          <p style="margin: 8px 0;"><strong>👤 Nom:</strong> ${ticket.name}</p>
+          <p style="margin: 8px 0;"><strong>📱 Téléphone:</strong> ${ticket.phoneCode}${ticket.phone}</p>
+          <p style="margin: 8px 0;"><strong>🎭 Type de Billet:</strong> ${ticket.type}</p>
+          <p style="margin: 8px 0;"><strong>📅 Date:</strong> ${ticket.date}</p>
+          <p style="margin: 8px 0;"><strong>🎟️ Places:</strong> ${ticket.places}</p>
+        </div>
+        <div style="margin: 30px 0; padding: 20px; background: white; border-radius: 10px; display: inline-block;">
+          <p style="color: #333; margin: 0; font-size: 12px; margin-bottom: 10px;">QR Code</p>
+          <div id="qr-pdf"></div>
+        </div>
+        <p style="margin-top: 30px; font-size: 11px; color: rgba(255,255,255,0.6);">Cices Events - Réservation Confirmée ✅</p>
+      </div>
+    `;
+
+    // Create canvas from SVG for QR code
+    if (qrRef.current) {
+      const svg = qrRef.current.querySelector('svg');
+      if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          if (ctx) {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            const qrDataUrl = canvas.toDataURL('image/png');
+            const qrDiv = element.querySelector('#qr-pdf');
+            if (qrDiv) {
+              qrDiv.innerHTML = `<img src="${qrDataUrl}" style="max-width: 150px; height: auto;" />`;
+            }
+            generatePDFDownload(element);
+          }
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+      }
+    }
+  };
+
+  const generatePDFDownload = (element: HTMLElement) => {
+    // Create a simple HTML-to-PDF approach using canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 1000;
+    
+    // Create a temporary container for html2canvas simulation
+    const printWindow = window.open('', '', 'height=800,width=800');
+    if (printWindow) {
+      printWindow.document.write(element.outerHTML);
+      printWindow.document.close();
+      printWindow.print();
+      setTimeout(() => printWindow.close(), 500);
+    }
   };
 
   return (
@@ -210,7 +354,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-g-bright/10 rounded-full blur-3xl" />
 
           <AnimatePresence mode="wait">
-            {!isEventLoading && (
+            {step === 'form' && !isEventLoading && (
               <motion.div
                 key={selectedEvent.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -291,71 +435,52 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                     {formErrors.phone && <p className="text-[8px] text-red-400 ml-1">{formErrors.phone}</p>}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-white ml-1">Événement</label>
-                      <div className="relative">
-                        <select
-                          className="w-full bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 pr-8 text-xs text-white font-medium focus:border-g-bright focus:bg-slate-800 transition-all outline-none appearance-none cursor-pointer hover:bg-slate-700/80 hover:border-white/40 shadow-lg"
-                          value={form.event}
-                          onChange={e => {
-                            setForm({ ...form, event: e.target.value });
-                            const ev = EVENTS.find(ev => ev.title === e.target.value);
-                            if (ev) setSelectedEvent(ev);
-                          }}
-                          title="Sélectionner un événement"
-                        >
-                          {EVENTS.map(ev => (
-                            <option key={ev.id} value={ev.title} className="bg-dark text-white">
-                              {ev.title}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="relative">
-                          <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[12px] font-bold uppercase tracking-widest text-white/70 ml-1">Places</label>
-                      <input
-                        type="number"
-                        readOnly
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/50 cursor-not-allowed outline-none"
-                        value="1"
-                      />
-                      <p className="text-[7px] text-g-bright/50 mt-1 italic">Limite : 1 ticket par personne</p>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-white ml-1">Événement</label>
+                    <div className="w-full bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 text-xs text-white font-medium shadow-lg">
+                      {selectedEvent.title}
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-white/70 ml-1">Type de billet</label>
-                      <div className="relative">
-                        <select
-                          className="w-full bg-slate-800/80 border border-white/20 rounded-lg px-3 py-2 pr-10 text-xs text-white font-medium focus:border-g-bright focus:bg-slate-800 transition-all outline-none appearance-none cursor-pointer hover:bg-slate-700/80 hover:border-white/40 shadow-lg"
-                          value={form.type}
-                          onChange={e => setForm({ ...form, type: e.target.value })}
-                          title="Sélectionner le type de billet"
-                        >
-                          <option value="Standard" className="bg-slate-700 text-white flex items-center gap-2">
-                            🎫 Standard - Accès général
-                          </option>
-                          <option value="VIP" className="bg-slate-700 text-white flex items-center gap-2">
-                            ⭐ VIP - Zone privilégiée
-                          </option>
-                          <option value="VVIP – Lounge Privé" className="bg-slate-700 text-white flex items-center gap-2">
-                            👑 VVIP – Lounge Privé
-                          </option>
-                        </select>
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none flex items-center gap-1">
-                          {form.type === 'Standard' && <span className="text-white/60">🎫</span>}
-                          {form.type === 'VIP' && <span className="text-yellow-400">⭐</span>}
-                          {form.type === 'VVIP – Lounge Privé' && <span className="text-purple-400">👑</span>}
-                          <svg className="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        </svg>
-                      </div>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/70 ml-1">Type de billet</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, type: 'Standard' })}
+                        className={`py-2 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          form.type === 'Standard'
+                            ? 'bg-g-bright/20 border-g-bright text-g-bright shadow-lg shadow-g-bright/30'
+                            : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-white/40 hover:bg-slate-800/80'
+                        }`}
+                        title="Accès général"
+                      >
+                        🎫 Standard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, type: 'VIP' })}
+                        className={`py-2 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          form.type === 'VIP'
+                            ? 'bg-yellow-500/20 border-yellow-400 text-yellow-400 shadow-lg shadow-yellow-400/30'
+                            : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-white/40 hover:bg-slate-800/80'
+                        }`}
+                        title="Zone privilégiée"
+                      >
+                        ⭐ VIP
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, type: 'VVIP – Lounge Privé' })}
+                        className={`py-2 px-2 rounded-lg text-xs font-bold transition-all border ${
+                          form.type === 'VVIP – Lounge Privé'
+                            ? 'bg-purple-500/20 border-purple-400 text-purple-400 shadow-lg shadow-purple-400/30'
+                            : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-white/40 hover:bg-slate-800/80'
+                        }`}
+                        title="Lounge Privé"
+                      >
+                        👑 VVIP
+                      </button>
                     </div>
                   </div>
 
@@ -372,11 +497,13 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                       </span>
                     </label>
                     {formErrors.terms && <p className="text-[8px] text-red-400 ml-1 mt-1">{formErrors.terms}</p>}
+                    {validationError && <p className="text-[10px] text-red-400 ml-1 mt-2">{validationError}</p>}
                   </div>
 
                   <button
-                    type="submit"
-                    disabled={isLoading}
+                    type="button"
+                    onClick={handleProceedToPayment}
+                    disabled={isLoading || !canProceedToPayment}
                     className="w-full bg-gradient-to-r from-g-bright to-g-mid text-white font-black uppercase tracking-widest py-3 rounded-lg mt-2 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 transition-all shadow-xl shadow-g-bright/20 flex items-center justify-center gap-2 text-xs"
                   >
                     {isLoading ? (
@@ -384,52 +511,225 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                     ) : (
                       <Ticket className="w-4 h-4" />
                     )}
-                    {isLoading ? 'Génération...' : 'Générer mon Ticket'}
+                    {isLoading ? 'Génération...' : 'Continuer vers Paiement'}
                   </button>
                 </form>
+              </motion.div>
+            )}
 
-                <AnimatePresence>
-                  {ticket && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      transition={{
-                        height: { duration: 1, ease: [0.4, 0, 0.2, 1] },
-                        opacity: { duration: 0.5, delay: 0.5 }
-                      }}
-                      className="mt-8 p-6 bg-white/10 border border-white/20 rounded-2xl text-center overflow-hidden relative"
-                    >
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-g-bright to-transparent opacity-50" />
+            {step === 'payment' && !isEventLoading && (
+              <motion.div
+                key="payment"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setStep('form')}
+                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+                    title="Retour au formulaire"
+                    aria-label="Retour au formulaire de réservation"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-white" />
+                  </button>
+                  <div>
+                    <h3 className="font-serif text-lg font-black text-white">Sélectionner un Moyen de Paiement</h3>
+                  </div>
+                </div>
 
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                      >
-                        <div className="text-g-bright font-serif font-bold mb-1">✅ Ticket Confirmé !</div>
-                        <div className="font-mono text-[10px] text-white/40 mb-6"># {ticket.id}</div>
+                <p className="text-white/50 text-[13px] font-light leading-relaxed mb-6">
+                  Choisissez votre méthode de paiement préférée pour finaliser votre réservation.
+                </p>
 
-                        <div ref={qrRef} className="bg-white p-3 rounded-xl w-fit mx-auto mb-6 shadow-2xl">
-                          <QRCodeSVG value={ticket.qrData} size={140} />
-                        </div>
+                <div className="space-y-2 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('wave');
+                      setTimeout(() => {
+                        handleBooking({ preventDefault: () => {} } as FormEvent);
+                        setStep('confirmation');
+                      }, 1000);
+                    }}
+                    className={`w-full py-4 px-4 rounded-lg border-2 transition-all font-bold flex items-center justify-between ${
+                      paymentMethod === 'wave'
+                        ? 'bg-blue-500/20 border-blue-400 text-blue-400'
+                        : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-blue-400/50 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <img src={waveIcon} alt="Wave" className="w-7 h-7 rounded-full object-cover" />
+                      <span>
+                        <div className="text-sm font-black">Wave</div>
+                        <div className="text-[11px] opacity-70">Paiement Mobile</div>
+                      </span>
+                    </span>
+                    {paymentMethod === 'wave' && <Check className="w-5 h-5" />}
+                  </button>
 
-                        <div className="text-xs text-white/70 leading-relaxed mb-6">
-                          <strong className="text-white">{ticket.name}</strong> — {ticket.email}<br />
-                          🎭 <strong>{ticket.event}</strong><br />
-                          📅 {ticket.date} · {ticket.places} place(s) · <strong>{ticket.type}</strong>
-                        </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('orange');
+                      setTimeout(() => {
+                        handleBooking({ preventDefault: () => {} } as FormEvent);
+                        setStep('confirmation');
+                      }, 1000);
+                    }}
+                    className={`w-full py-4 px-4 rounded-lg border-2 transition-all font-bold flex items-center justify-between ${
+                      paymentMethod === 'orange'
+                        ? 'bg-orange-500/20 border-orange-400 text-orange-400'
+                        : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-orange-400/50 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <img src={orangeIcon} alt="Orange Money" className="w-7 h-7 rounded-full object-cover" />
+                      <span>
+                        <div className="text-sm font-black">Orange Money</div>
+                        <div className="text-[11px] opacity-70">Portefeuille Digital</div>
+                      </span>
+                    </span>
+                    {paymentMethod === 'orange' && <Check className="w-5 h-5" />}
+                  </button>
 
-                        <button 
-                          onClick={downloadQRCode}
-                          className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold py-3 rounded-full transition-all flex items-center justify-center gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Télécharger le QR Code
-                        </button>
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('cinetpay');
+                      setTimeout(() => {
+                        handleBooking({ preventDefault: () => {} } as FormEvent);
+                        setStep('confirmation');
+                      }, 1000);
+                    }}
+                    className={`w-full py-4 px-4 rounded-lg border-2 transition-all font-bold flex items-center justify-between ${
+                      paymentMethod === 'cinetpay'
+                        ? 'bg-green-500/20 border-green-400 text-green-400'
+                        : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-green-400/50 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <img src={cinetpayIcon} alt="CinetPay" className="w-7 h-7 rounded-full object-cover" />
+                      <span>
+                        <div className="text-sm font-black">CinetPay</div>
+                        <div className="text-[11px] opacity-70">Plateforme de Paiement</div>
+                      </span>
+                    </span>
+                    {paymentMethod === 'cinetpay' && <Check className="w-5 h-5" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod('card');
+                      setTimeout(() => {
+                        handleBooking({ preventDefault: () => {} } as FormEvent);
+                        setStep('confirmation');
+                      }, 1000);
+                    }}
+                    className={`w-full py-4 px-4 rounded-lg border-2 transition-all font-bold flex items-center justify-between ${
+                      paymentMethod === 'card'
+                        ? 'bg-purple-500/20 border-purple-400 text-purple-400'
+                        : 'bg-slate-800/60 border-white/20 text-white/70 hover:border-purple-400/50 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <img src={cardIcon} alt="Carte Bancaire" className="w-7 h-7 rounded-full object-cover" />
+                      <span>
+                        <div className="text-sm font-black">Carte Bancaire</div>
+                        <div className="text-[11px] opacity-70">Visa / Mastercard</div>
+                      </span>
+                    </span>
+                    {paymentMethod === 'card' && <Check className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                <p className="text-white/40 text-[11px] text-center">
+                  💡 Tous vos paiements sont sécurisés avec les meilleur standards cryptographiques.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 'confirmation' && ticket && !isEventLoading && (
+              <motion.div
+                key="confirmation"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-lg bg-g-bright/10">
+                    <Check className="w-5 h-5 text-g-bright" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg font-black text-white">Réservation Confirmée</h3>
+                  </div>
+                </div>
+
+                <p className="text-white/50 text-[13px] font-light leading-relaxed mb-6">
+                  Votre ticket a été généré avec succès. Partagez-le ou téléchargez-le maintenant.
+                </p>
+
+                <div ref={qrRef} className="bg-white p-4 rounded-xl w-fit mx-auto mb-6 shadow-2xl">
+                  <QRCodeSVG value={ticket.qrData} size={160} />
+                </div>
+
+                <div className="bg-white/10 border border-white/20 rounded-xl p-4 mb-6 text-xs text-white/70 space-y-2">
+                  <div className="flex justify-between">
+                    <span>👤 Nom:</span>
+                    <strong className="text-white">{ticket.name}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>📱 Téléphone:</span>
+                    <strong className="text-white">{ticket.phoneCode}{ticket.phone}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>🎭 Événement:</span>
+                    <strong className="text-white">{ticket.event}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>🎟️ Type:</span>
+                    <strong className="text-white">{ticket.type}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>📅 Date:</span>
+                    <strong className="text-white">{ticket.date}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>🔖 ID:</span>
+                    <strong className="text-white font-mono text-[10px]">{ticket.id}</strong>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <button 
+                    onClick={downloadPDF}
+                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Télécharger PDF
+                  </button>
+                  <button 
+                    onClick={shareOnWhatsApp}
+                    className="w-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-xs font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    WhatsApp
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setStep('form');
+                    setPaymentMethod(null);
+                  }}
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold py-2 rounded-lg transition-all"
+                >
+                  ← Réserver un autre ticket
+                </button>
               </motion.div>
             )}
           </AnimatePresence>

@@ -123,3 +123,8 @@ select option:hover {
 .animate-ring-out-delay { animation: ringOut 1.8s ease-out 0.4s infinite; }
 .animate-dot-b { animation: dotB 1.3s infinite ease-in-out; }
 .animate-flash-logo { animation: flashLogo 3.2s ease-in-out infinite; }
+
+.loading-dot { animation-delay: 0s; }
+.loading-dot-0 { animation-delay: 0s; }
+.loading-dot-1 { animation-delay: 0.2s; }
+.loading-dot-2 { animation-delay: 0.4s; }
