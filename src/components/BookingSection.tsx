@@ -245,70 +245,69 @@ const BookingSection: React.FC<BookingSectionProps> = ({
   return (
     <motion.section
       id="commande"
-      className="relative min-h-[50vh] bg-[#030d07] flex flex-col lg:flex-row"
+      className="relative min-h-[50vh] bg-[#030d07] flex flex-col lg:flex-row overflow-hidden"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      {/* Loading Overlay for Event Selection */}
+      {/* Loading Overlays ... */}
       <AnimatePresence>
         {isEventLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center"
+            className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center p-6 text-center"
           >
-            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-150 animate-pulse" />
-            <div className="text-white/70 uppercase tracking-[0.3em] text-sm mb-6 animate-pulse">Chargement de l'événement…</div>
+            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-125 sm:scale-150 animate-pulse" />
+            <div className="text-white/70 uppercase tracking-[0.2em] text-xs sm:text-sm mb-6 animate-pulse">Chargement de l'événement…</div>
             <div className="flex gap-2 mb-8">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-3 h-3 rounded-full bg-g-bright animate-dot-b" style={{ animationDelay: `${i * 0.2}s` }} />
+                <div key={i} className="w-2.5 h-2.5 sm:w-3 h-3 rounded-full bg-g-bright animate-dot-b" style={{ animationDelay: `${i * 0.2}s` }} />
               ))}
             </div>
-            <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-full max-w-[200px] sm:max-w-xs h-1 bg-white/10 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-g-mid via-g-bright to-g-light"
                 initial={{ width: 0 }}
                 animate={{ width: `${eventLoadProgress}%` }}
               />
             </div>
-            <div className="mt-4 font-mono text-white/40 text-xs">{Math.floor(eventLoadProgress)}%</div>
+            <div className="mt-4 font-mono text-white/40 text-[10px] sm:text-xs">{Math.floor(eventLoadProgress)}%</div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Loading Overlay for Ticket Generation */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center"
+            className="absolute inset-0 z-[60] bg-dark flex flex-col items-center justify-center p-6 text-center"
           >
-            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-150 animate-pulse" />
-            <div className="text-white/70 uppercase tracking-[0.3em] text-sm mb-6 animate-pulse">Génération du ticket…</div>
+            <Logo eventTitle={selectedEvent.title} className="mb-8 scale-125 sm:scale-150 animate-pulse" />
+            <div className="text-white/70 uppercase tracking-[0.2em] text-xs sm:text-sm mb-6 animate-pulse">Génération du ticket…</div>
             <div className="flex gap-2 mb-8">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-3 h-3 rounded-full bg-g-bright animate-dot-b" style={{ animationDelay: `${i * 0.2}s` }} />
+                <div key={i} className="w-2.5 h-2.5 sm:w-3 h-3 rounded-full bg-g-bright animate-dot-b" style={{ animationDelay: `${i * 0.2}s` }} />
               ))}
             </div>
-            <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-full max-w-[200px] sm:max-w-xs h-1 bg-white/10 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-g-mid via-g-bright to-g-light"
                 initial={{ width: 0 }}
                 animate={{ width: `${loadProgress}%` }}
               />
             </div>
-            <div className="mt-4 font-mono text-white/40 text-xs">{Math.floor(loadProgress)}%</div>
+            <div className="mt-4 font-mono text-white/40 text-[10px] sm:text-xs">{Math.floor(loadProgress)}%</div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Left Side: Event Image */}
-      <div className="relative flex-1 min-h-[400px] lg:min-h-screen overflow-hidden">
+      {/* Left Side: Event Image & Content */}
+      <div className="relative flex-1 min-h-[450px] sm:min-h-[600px] lg:min-h-screen overflow-hidden">
         <motion.img
           key={selectedEvent.id}
           initial={{ opacity: 0, scale: 1.1 }}
@@ -317,15 +316,15 @@ const BookingSection: React.FC<BookingSectionProps> = ({
           src={selectedEvent.image}
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-dark/30 to-[#030d07]" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-[#030d07] via-transparent to-transparent">
-          <div className="bg-g-bright text-dark text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit mb-4">
+        <div className="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-transparent via-dark/40 to-[#030d07]" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 md:p-12 lg:p-16 bg-gradient-to-t from-[#030d07] via-dark/20 to-transparent">
+          <div className="bg-g-bright text-dark text-[9px] sm:text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit mb-4 shadow-lg">
             {selectedEvent.category}
           </div>
-          <h2 className="font-serif text-3xl md:text-5xl font-black text-white leading-tight mb-4">
+          <h2 className="font-serif text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-4 sm:mb-6 text-shadow-glow">
             {selectedEvent.title}
           </h2>
-          <p className="text-white/70 text-sm md:text-base leading-relaxed mb-4">
+          <p className="text-white/80 text-sm sm:text-lg leading-relaxed mb-6 sm:mb-8 max-w-2xl font-light">
             {selectedEvent.title === 'FIDAK 2026' 
               ? 'Le plus grand salon international de Dakar, rassemblant exposants et visiteurs du monde entier pour une expérience unique.'
               : selectedEvent.category === 'Concert' 
@@ -341,9 +340,9 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                         : 'Découvrez cet événement unique et enrichissant pour tous les passionnés.'
             }
           </p>
-          <div className="flex flex-wrap gap-4 md:gap-6 text-white/60 text-xs md:text-sm">
-            <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-g-bright" /> {selectedEvent.date}</span>
-            <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-g-bright" /> {selectedEvent.location}</span>
+          <div className="flex flex-wrap gap-4 sm:gap-8 text-white/70 text-xs sm:text-base">
+            <span className="flex items-center gap-2.5 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"><Calendar className="w-4 h-4 text-g-bright" /> {selectedEvent.date}</span>
+            <span className="flex items-center gap-2.5 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"><MapPin className="w-4 h-4 text-g-bright" /> {selectedEvent.location}</span>
           </div>
         </div>
       </div>
@@ -673,8 +672,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                   Votre ticket a été généré avec succès. Partagez-le ou téléchargez-le maintenant.
                 </p>
 
-                <div ref={qrRef} className="bg-white p-4 rounded-xl w-fit mx-auto mb-6 shadow-2xl">
-                  <QRCodeSVG value={ticket.qrData} size={160} />
+                <div ref={qrRef} className="bg-white p-4 rounded-xl w-fit mx-auto mb-6 shadow-2xl scale-90 sm:scale-100">
+                  <QRCodeSVG value={ticket.qrData} size={140} />
                 </div>
 
                 <div className="bg-white/10 border border-white/20 rounded-xl p-4 mb-6 text-xs text-white/70 space-y-2">
@@ -704,17 +703,17 @@ const BookingSection: React.FC<BookingSectionProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <button 
                     onClick={downloadPDF}
-                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" />
                     Télécharger PDF
                   </button>
                   <button 
                     onClick={shareOnWhatsApp}
-                    className="w-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-xs font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-xs font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     <Share2 className="w-4 h-4" />
                     WhatsApp
