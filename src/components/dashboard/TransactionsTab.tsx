@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DollarSign, Filter, ChevronDown } from 'lucide-react';
+import { DollarSign, Filter, ChevronDown, Search, Calendar, User } from 'lucide-react';
 import { Transaction, EventItem } from '../../types/dashboard';
 
 interface TransactionsTabProps {
@@ -11,18 +11,104 @@ interface TransactionsTabProps {
 
 const TransactionsTab = ({ transactions, events, totalRevenue, formatCurrency }: TransactionsTabProps) => {
   const [selectedEvent, setSelectedEvent] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCashier, setSelectedCashier] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+
+  const cashiers = useMemo(() => {
+    const uniqueCashiers = new Set(transactions.map(t => t.cashierName).filter(Boolean));
+    return Array.from(uniqueCashiers) as string[];
+  }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
-    if (selectedEvent === 'all') return transactions;
-    return transactions.filter(t => t.event === selectedEvent);
-  }, [transactions, selectedEvent]);
+    return transactions.filter(t => {
+      const matchEvent = selectedEvent === 'all' || t.event === selectedEvent;
+      const matchSearch = searchQuery === '' || 
+        t.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchCashier = selectedCashier === 'all' || t.cashierName === selectedCashier;
+      const matchDate = selectedDate === '' || t.date.includes(selectedDate);
+
+      return matchEvent && matchSearch && matchCashier && matchDate;
+    });
+  }, [transactions, selectedEvent, searchQuery, selectedCashier, selectedDate]);
 
   const currentRevenue = useMemo(() => {
     return filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
   }, [filteredTransactions]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto space-y-6">
+      {/* Filters Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-sm">
+        {/* Search Bar */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="w-4 h-4 text-[#F2B759]/70" />
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher (Client, ID)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl pl-11 pr-4 py-3 outline-none focus:border-[#F2B759]/50 transition-all"
+          />
+        </div>
+
+        {/* Event Filter */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Filter className="w-4 h-4 text-[#F2B759]/70" />
+          </div>
+          <select
+            value={selectedEvent}
+            onChange={(e) => setSelectedEvent(e.target.value)}
+            className="appearance-none w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl pl-11 pr-10 py-3 outline-none focus:border-[#F2B759]/50 transition-all cursor-pointer"
+          >
+            <option value="all">Tous les événements</option>
+            {events.map(event => (
+              <option key={event.id} value={event.title}>{event.title}</option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+            <ChevronDown className="w-4 h-4 text-white/30" />
+          </div>
+        </div>
+
+        {/* Cashier Filter */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <User className="w-4 h-4 text-[#F2B759]/70" />
+          </div>
+          <select
+            value={selectedCashier}
+            onChange={(e) => setSelectedCashier(e.target.value)}
+            className="appearance-none w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl pl-11 pr-10 py-3 outline-none focus:border-[#F2B759]/50 transition-all cursor-pointer"
+          >
+            <option value="all">Tous les caissiers</option>
+            {cashiers.map(cashier => (
+              <option key={cashier} value={cashier}>{cashier}</option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+            <ChevronDown className="w-4 h-4 text-white/30" />
+          </div>
+        </div>
+
+        {/* Date Filter */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Calendar className="w-4 h-4 text-[#F2B759]" />
+          </div>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full bg-slate-900 border border-white/10 text-white text-sm rounded-xl pl-11 pr-4 py-3 outline-none focus:border-[#F2B759]/50 transition-all [color-scheme:dark]"
+          />
+        </div>
+      </div>
+
       <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 sm:p-8 shadow-xl shadow-black/20 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F2B759]/5 rounded-full blur-[100px] -mr-32 -mt-32"></div>
         
@@ -32,36 +118,14 @@ const TransactionsTab = ({ transactions, events, totalRevenue, formatCurrency }:
               <DollarSign className="h-6 w-6 text-[#F2B759]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Historique des Transactions</h2>
-              <p className="text-sm text-white/50 mt-1">Dernières opérations financières enregistrées</p>
+              <h2 className="text-2xl font-bold text-white">Historique des Versements</h2>
+              <p className="text-sm text-white/50 mt-1">Dernières opérations financières enregistrées par vos collecteurs</p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
-            {/* Event Filter Dropdown */}
-            <div className="relative group/filter w-full sm:w-auto">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Filter className="w-4 h-4 text-[#F2B759]/70" />
-              </div>
-              <select
-                value={selectedEvent}
-                onChange={(e) => setSelectedEvent(e.target.value)}
-                className="appearance-none bg-slate-900 border border-white/10 text-white text-sm rounded-2xl pl-11 pr-10 py-3.5 outline-none focus:border-[#F2B759]/50 transition-all cursor-pointer w-full sm:min-w-[220px]"
-              >
-                <option value="all">Tous les événements</option>
-                {events.map(event => (
-                  <option key={event.id} value={event.title}>{event.title}</option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                <ChevronDown className="w-4 h-4 text-white/30" />
-              </div>
-            </div>
-
-            <div className="bg-[#F2B759]/10 px-6 py-3.5 rounded-2xl border border-[#F2B759]/20 flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#F2B759]/60">Total :</span>
-              <span className="text-lg font-black text-[#F2B759]">{formatCurrency(selectedEvent === 'all' ? totalRevenue : currentRevenue)}</span>
-            </div>
+          <div className="bg-[#F2B759]/10 px-6 py-3.5 rounded-2xl border border-[#F2B759]/20 flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#F2B759]/60">Total Filtré :</span>
+            <span className="text-lg font-black text-[#F2B759]">{formatCurrency(currentRevenue)}</span>
           </div>
         </div>
 
@@ -86,11 +150,16 @@ const TransactionsTab = ({ transactions, events, totalRevenue, formatCurrency }:
                 </div>
                 
                 <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                  <div className="flex items-center gap-2">
-                     <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">ID: {transaction.id}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">ID: {transaction.id}</span>
+                    {transaction.cashierName && (
+                      <span className="text-[10px] text-[#F2B759]/70 font-bold uppercase tracking-widest flex items-center gap-1">
+                        <User className="w-3 h-3" /> Caissier: {transaction.cashierName}
+                      </span>
+                    )}
                   </div>
                   <span
-                    className={`rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] border ${
+                    className={`rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] border self-end ${
                       transaction.status === 'Confirmé'
                         ? 'bg-[#0A4A3C]/20 border-[#F2B759] text-[#F2B759]'
                         : transaction.status === 'En attente'
@@ -109,13 +178,13 @@ const TransactionsTab = ({ transactions, events, totalRevenue, formatCurrency }:
             <div className="inline-flex p-6 rounded-full bg-white/5 mb-4">
               <DollarSign className="w-12 h-12 text-white/10" />
             </div>
-            <p className="text-white/50 font-medium">Aucune transaction trouvée pour cet événement.</p>
+            <p className="text-white/50 font-medium">Aucun versement trouvé avec ces filtres.</p>
           </div>
         )}
         
         <div className="mt-10 pt-6 border-t border-white/5 text-center">
           <button className="text-sm font-bold text-white/40 hover:text-[#F2B759] transition-colors uppercase tracking-widest">
-            Voir toutes les transactions historiques →
+            Voir tous les versements historiques →
           </button>
         </div>
       </div>
@@ -124,4 +193,3 @@ const TransactionsTab = ({ transactions, events, totalRevenue, formatCurrency }:
 };
 
 export default TransactionsTab;
-

@@ -3,6 +3,7 @@ import { LucideIcon } from 'lucide-react';
 export interface Transaction {
   id: string;
   customerName: string;
+  cashierName?: string;
   event: string;
   amount: number;
   date: string;

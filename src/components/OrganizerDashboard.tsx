@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard,
   Calendar,
-  DollarSign,
+  Users,
   CreditCard,
   X
 } from 'lucide-react';
@@ -38,11 +38,11 @@ interface OrganizerDashboardProps {
 const revenueData = [112000, 138000, 150000, 125000, 142000, 158000, 164000];
 
 const transactionsSeed: Transaction[] = [
-  { id: 'TX-001', customerName: 'Aminata Diop', event: 'FIDAK 2026', amount: 76000, date: '12 Avr 2026', status: 'Confirmé' },
-  { id: 'TX-002', customerName: 'Mamadou Fall', event: 'Festival Jazz', amount: 45000, date: '12 Avr 2026', status: 'En attente' },
-  { id: 'TX-003', customerName: 'Seynabou Ba', event: 'Marathon Dakar', amount: 20000, date: '11 Avr 2026', status: 'Confirmé' },
-  { id: 'TX-004', customerName: 'Ousmane Ndao', event: 'Sommet Business', amount: 125000, date: '10 Avr 2026', status: 'Annulé' },
-  { id: 'TX-005', customerName: 'Fatou Thiam', event: "Festival Saveurs d'Afrique", amount: 90000, date: '09 Avr 2026', status: 'Confirmé' }
+  { id: 'TX-001', customerName: 'Aminata Diop', cashierName: 'Moussa Sy', event: 'FIDAK 2026', amount: 76000, date: '12 Avr 2026', status: 'Confirmé' },
+  { id: 'TX-002', customerName: 'Mamadou Fall', cashierName: 'Penda Sall', event: 'Festival Jazz', amount: 45000, date: '12 Avr 2026', status: 'En attente' },
+  { id: 'TX-003', customerName: 'Seynabou Ba', cashierName: 'Moussa Sy', event: 'Marathon Dakar', amount: 20000, date: '11 Avr 2026', status: 'Confirmé' },
+  { id: 'TX-004', customerName: 'Ousmane Ndao', cashierName: 'Fatou Diallo', event: 'Sommet Business', amount: 125000, date: '10 Avr 2026', status: 'Annulé' },
+  { id: 'TX-005', customerName: 'Fatou Thiam', cashierName: 'Penda Sall', event: "Festival Saveurs d'Afrique", amount: 90000, date: '09 Avr 2026', status: 'Confirmé' }
 ];
 
 const alertsSeed: AlertItem[] = [
@@ -148,7 +148,7 @@ const OrganizerDashboard = ({ organizerEmail, organizerEvents, onLogout, onCreat
   const menuItems: MenuItem[] = [
     { id: 'dashboard', label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: 'events', label: 'Mes événements', icon: Calendar },
-    { id: 'transactions', label: 'Transactions', icon: DollarSign },
+    { id: 'transactions', label: 'Collecteurs', icon: Users },
     { id: 'subscription', label: 'Abonnement', icon: CreditCard },
   ];
 
@@ -214,7 +214,7 @@ const OrganizerDashboard = ({ organizerEmail, organizerEvents, onLogout, onCreat
               <p className="mt-2 text-white/50 text-sm md:text-base max-w-2xl">
                 {activeTab === 'dashboard' && "Analyse en temps réel de vos performances, ventes et engagement."}
                 {activeTab === 'events' && 'Gérez le cycle de vie de vos événements et suivez les stocks de billets.'}
-                {activeTab === 'transactions' && 'Suivi complet de vos flux financiers et historique des paiements.'}
+                {activeTab === 'transactions' && 'Suivi complet des versements effectués par vos collecteurs.'}
                 {activeTab === 'subscription' && 'Ajustez votre offre SaaS pour répondre à vos besoins croissants.'}
               </p>
             </div>
