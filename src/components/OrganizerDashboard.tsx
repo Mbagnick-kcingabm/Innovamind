@@ -16,6 +16,7 @@ import EventsTab from './dashboard/EventsTab';
 import TransactionsTab from './dashboard/TransactionsTab';
 import SubscriptionTab from './dashboard/SubscriptionTab';
 import EventStatsPage from './dashboard/EventStatsPage';
+import MembresPage from './equipe/MembresPage';
 
 interface OrganizerDashboardProps {
   organizerEmail: string;
@@ -149,6 +150,7 @@ const OrganizerDashboard = ({ organizerEmail, organizerEvents, onLogout, onCreat
     { id: 'dashboard', label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: 'events', label: 'Mes événements', icon: Calendar },
     { id: 'transactions', label: 'Collecteurs', icon: Users },
+    { id: 'equipe', label: 'Équipe', icon: Users },
     { id: 'subscription', label: 'Abonnement', icon: CreditCard },
   ];
 
@@ -215,6 +217,7 @@ const OrganizerDashboard = ({ organizerEmail, organizerEvents, onLogout, onCreat
                 {activeTab === 'dashboard' && "Analyse en temps réel de vos performances, ventes et engagement."}
                 {activeTab === 'events' && 'Gérez le cycle de vie de vos événements et suivez les stocks de billets.'}
                 {activeTab === 'transactions' && 'Suivi complet des versements effectués par vos collecteurs.'}
+                {activeTab === 'equipe' && 'Gérez les membres de votre équipe et leurs accès.'}
                 {activeTab === 'subscription' && 'Ajustez votre offre SaaS pour répondre à vos besoins croissants.'}
               </p>
             </div>
@@ -282,6 +285,10 @@ const OrganizerDashboard = ({ organizerEmail, organizerEvents, onLogout, onCreat
 
               {activeTab === 'subscription' && (
                 <SubscriptionTab formatCurrency={formatCurrency} />
+              )}
+
+              {activeTab === 'equipe' && (
+                <MembresPage />
               )}
 
               {activeTab === 'event-details' && selectedEventForStats && (
