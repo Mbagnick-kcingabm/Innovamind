@@ -3,8 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, BarChart3, Ticket, Calendar, Users, 
   Plus, Edit2, Trash2, Pause, Play, AlertCircle, X, 
-  LayoutDashboard, LogOut, Menu 
+  LayoutDashboard, LogOut, Menu, TrendingUp, Activity
 } from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
 
 interface EventSummary {
   id?: string;
@@ -100,6 +104,19 @@ const AdminDashboard = ({ adminEmail, EVENTS, latestTicket, onLogout }: AdminDas
     acc[event.category] = (acc[event.category] || 0) + 1;
     return acc;
   }, {});
+
+  const categoryData = Object.entries(categoryCounts).map(([name, value]) => ({ name, value }));
+  const COLORS = ['#F2B759', '#3b82f6', '#8b5cf6', '#10b981', '#ec4899', '#f43f5e'];
+
+  const performanceData = [
+    { name: 'Jan', revenue: 450000, events: 4 },
+    { name: 'Fév', revenue: 520000, events: 5 },
+    { name: 'Mar', revenue: 380000, events: 3 },
+    { name: 'Avr', revenue: 650000, events: 7 },
+    { name: 'Mai', revenue: 840000, events: 8 },
+    { name: 'Juin', revenue: 720000, events: 6 },
+    { name: 'Juil', revenue: 950000, events: 9 },
+  ];
 
   const menuItems = [
     { id: 'dashboard', label: 'Vue d\'ensemble', icon: LayoutDashboard },
@@ -278,18 +295,83 @@ const AdminDashboard = ({ adminEmail, EVENTS, latestTicket, onLogout }: AdminDas
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-xl">
-                    <div className="flex items-center gap-3 mb-8">
-                      <BarChart3 className="w-6 h-6 text-g-bright" />
-                      <h2 className="text-xl font-bold">Répartition par catégorie</h2>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      {Object.entries(categoryCounts).map(([category, count]) => (
-                        <div key={category} className="rounded-2xl bg-white/5 px-5 py-4 border border-white/10 hover:bg-white/10 transition-colors">
-                          <p className="text-sm font-medium text-white/60 uppercase tracking-wider">{category}</p>
-                          <p className="text-3xl font-black text-white mt-2">{count}</p>
+                  {/* Charts Grid */}
+                  <div className="grid gap-6 lg:grid-cols-3">
+                    {/* Main Performance Chart */}
+                    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-xl lg:col-span-2">
+                      <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                          <Activity className="w-6 h-6 text-g-bright" />
+                          <h2 className="text-xl font-bold">Performance Globale</h2>
                         </div>
-                      ))}
+                        <span className="text-xs font-bold px-3 py-1 bg-g-bright/20 text-g-bright rounded-full uppercase tracking-wider">Ce Semestre</span>
+                      </div>
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#F2B759" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#F2B759" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff15" vertical={false} />
+                            <XAxis dataKey="name" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                            <RechartsTooltip 
+                              contentStyle={{ backgroundColor: '#051a15', borderColor: '#ffffff20', borderRadius: '12px', color: '#fff' }}
+                              itemStyle={{ color: '#F2B759', fontWeight: 'bold' }}
+                              formatter={(value: number) => [`${value.toLocaleString()} FCFA`, 'Revenus']}
+                            />
+                            <Area type="monotone" dataKey="revenue" stroke="#F2B759" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Category Pie Chart */}
+                    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-xl">
+                      <div className="flex items-center gap-3 mb-6">
+                        <BarChart3 className="w-6 h-6 text-blue-400" />
+                        <h2 className="text-xl font-bold">Catégories</h2>
+                      </div>
+                      <div className="h-64 w-full flex items-center justify-center relative">
+                        {categoryData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={categoryData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                                stroke="none"
+                              >
+                                {categoryData.map((_, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <RechartsTooltip 
+                                contentStyle={{ backgroundColor: '#051a15', borderColor: '#ffffff20', borderRadius: '12px', color: '#fff' }}
+                                itemStyle={{ fontWeight: 'bold' }}
+                              />
+                              <Legend 
+                                verticalAlign="bottom" 
+                                height={36} 
+                                iconType="circle"
+                                formatter={(value) => <span className="text-white/70 text-sm font-medium">{value}</span>}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <p className="text-white/50 text-sm">Aucune donnée disponible</p>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                           <span className="text-2xl font-black">{events.length}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
